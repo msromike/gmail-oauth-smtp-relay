@@ -2,6 +2,17 @@
 
 Local SMTP relay server that accepts email from applications and forwards them to Gmail using OAuth2 authentication.
 
+## Features
+
+- OAuth2 authentication (no password storage required)
+- System tray integration with menu controls
+- Runs silently in background
+- Auto-start support via Windows Startup folder
+- Clean logging with rotation support
+- Automatic token refresh
+- Simple configuration via JSON
+- Built for Windows with Python
+
 ## Overview
 
 This relay server allows local applications to send email through Gmail without storing passwords. It uses OAuth2 for secure authentication with Google's SMTP servers.
@@ -21,14 +32,25 @@ Local Application --> SMTP Relay (localhost:1025) --> Gmail SMTP (OAuth2) --> Re
 
 ## Installation
 
-Dependencies are installed globally:
-- aiosmtpd
-- google-auth
-- google-auth-oauthlib
-- google-auth-httplib2
-- google-api-python-client
-- pystray
-- Pillow
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/oauth2-smtp-relay.git
+cd oauth2-smtp-relay
+```
+
+2. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+Dependencies installed:
+- aiosmtpd - SMTP server implementation
+- google-auth - OAuth2 authentication
+- google-auth-oauthlib - OAuth2 flow handling
+- google-auth-httplib2 - HTTP library for Google APIs
+- google-api-python-client - Google API client
+- pystray - System tray icon support
+- Pillow - Image library for tray icon
 
 ## Setup
 
@@ -165,6 +187,17 @@ Re-run `setup_oauth.py` to generate a new refresh token.
 - Simplified logging (startup, auth, email subject only)
 - Auto-refresh OAuth2 tokens
 
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
 ## License
 
-This project is provided as-is for personal use.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Security
+
+- Never commit `config.json` or `client_secret*.json` files
+- Keep OAuth2 credentials secure
+- Relay only accepts localhost connections by default
+- Review logs regularly for suspicious activity

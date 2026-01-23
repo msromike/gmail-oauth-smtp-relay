@@ -1,5 +1,37 @@
+# Sensitive configuration files
 config.json
-smtp_relay.log
 client_secret*.json
+token.json
+
+# Log files
+*.log
+
+# Python cache
 *.pyc
 __pycache__/
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments (if created)
+venv/
+env/
+ENV/
+.venv
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Test files
+.pytest_cache/
+.coverage
+htmlcov/
