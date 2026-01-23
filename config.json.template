@@ -1,0 +1,17 @@
+{
+  "gmail": {
+    "client_id": "YOUR_CLIENT_ID.apps.googleusercontent.com",
+    "client_secret": "YOUR_CLIENT_SECRET",
+    "refresh_token": ""
+  },
+  "smtp_relay": {
+    "host": "127.0.0.1",
+    "port": 1025,
+    "gmail_smtp": "smtp.gmail.com",
+    "gmail_smtp_port": 587
+  },
+  "logging": {
+    "level": "INFO",
+    "file": "smtp_relay.log"
+  }
+}
