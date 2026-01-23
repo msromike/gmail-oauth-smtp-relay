@@ -178,7 +178,17 @@ class SMTPRelayServer:
         """Stop the server and exit"""
         self.logger.info("Shutting down from tray menu")
         self.running = False
-        self.stop()
+        # Stop controller first
+        if self.controller:
+            try:
+                self.controller.stop()
+                self.logger.info("SMTP Relay stopped cleanly")
+            except Exception as e:
+                self.logger.debug(f"Controller stop: {e}")
+        # Then stop event loop
+        if self.loop and self.loop.is_running():
+            self.loop.call_soon_threadsafe(self.loop.stop)
+        # Finally stop tray
         if self.tray_icon:
             self.tray_icon.stop()
     
@@ -210,9 +220,8 @@ class SMTPRelayServer:
             while self.running:
                 self.loop.run_until_complete(asyncio.sleep(1))
         except Exception as e:
-            self.logger.error(f"Server error: {e}")
-        finally:
-            self.stop()
+            if self.running:  # Only log if unexpected
+                self.logger.error(f"Server error: {e}")
     
     def start(self):
         """Start the SMTP relay server with system tray"""
@@ -225,16 +234,8 @@ class SMTPRelayServer:
         self.tray_icon.run()
     
     def stop(self):
-        """Stop the SMTP relay server"""
-        self.running = False
-        if self.controller:
-            try:
-                self.controller.stop()
-                self.logger.info("SMTP Relay stopped")
-            except Exception as e:
-                self.logger.error(f"Error stopping controller: {e}")
-        if self.loop and self.loop.is_running():
-            self.loop.call_soon_threadsafe(self.loop.stop)
+        """Stop the SMTP relay server (for backward compatibility)"""
+        self._quit_app()
 
 def main():
     """Main entry point"""

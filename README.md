@@ -146,6 +146,12 @@ Re-run `setup_oauth.py` to generate a new refresh token.
 
 ## Changelog
 
+### 2026-01-23 - Clean Shutdown Handling
+- Improved graceful shutdown sequence to eliminate error messages
+- Controller stops before event loop for clean termination
+- Simplified logging on exit (only success messages, debug for exceptions)
+- Tray menu shutdown now shows "SMTP Relay stopped cleanly"
+
 ### 2026-01-23 - System Tray Integration
 - Added system tray icon with menu (View Log, Stop & Exit)
 - Runs silently in background without console window
