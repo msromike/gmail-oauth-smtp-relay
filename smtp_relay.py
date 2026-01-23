@@ -9,6 +9,7 @@ import json
 import logging
 import smtplib
 import sys
+import threading
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from pathlib import Path
@@ -18,6 +19,8 @@ from aiosmtpd.controller import Controller
 from aiosmtpd.smtp import SMTP as SMTPServer
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
+import pystray
+from PIL import Image, ImageDraw
 
 class GmailOAuth2Handler:
     """Handler for SMTP relay with OAuth2 Gmail authentication"""
@@ -113,6 +116,9 @@ class SMTPRelayServer:
         self.config = self._load_config()
         self._setup_logging()
         self.controller = None
+        self.tray_icon = None
+        self.running = False
+        self.loop = None
         
     def _load_config(self):
         """Load configuration from JSON file"""
@@ -144,8 +150,40 @@ class SMTPRelayServer:
         
         self.logger = logging.getLogger('SMTPRelayServer')
     
-    def start(self):
-        """Start the SMTP relay server"""
+    def _create_tray_icon(self):
+        """Create system tray icon"""
+        # Create a simple icon
+        image = Image.new('RGB', (64, 64), color='blue')
+        draw = ImageDraw.Draw(image)
+        draw.rectangle([16, 16, 48, 48], fill='white')
+        
+        # Create menu
+        menu = pystray.Menu(
+            pystray.MenuItem('SMTP Relay Running', lambda: None, enabled=False),
+            pystray.MenuItem('View Log', self._view_log),
+            pystray.MenuItem('Stop & Exit', self._quit_app)
+        )
+        
+        self.tray_icon = pystray.Icon('smtp_relay', image, 'SMTP Relay', menu)
+    
+    def _view_log(self):
+        """Open log file"""
+        import subprocess
+        log_file = self.config.get('logging', {}).get('file', 'smtp_relay.log')
+        log_path = Path(__file__).parent / log_file
+        if log_path.exists():
+            subprocess.Popen(['notepad.exe', str(log_path)])
+    
+    def _quit_app(self):
+        """Stop the server and exit"""
+        self.logger.info("Shutting down from tray menu")
+        self.running = False
+        self.stop()
+        if self.tray_icon:
+            self.tray_icon.stop()
+    
+    def _run_server(self):
+        """Run the SMTP server in background thread"""
         relay_config = self.config['smtp_relay']
         host = relay_config['host']
         port = relay_config['port']
@@ -163,18 +201,40 @@ class SMTPRelayServer:
         )
         
         self.controller.start()
+        self.running = True
         
         # Keep running
         try:
-            asyncio.get_event_loop().run_forever()
-        except KeyboardInterrupt:
+            self.loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(self.loop)
+            while self.running:
+                self.loop.run_until_complete(asyncio.sleep(1))
+        except Exception as e:
+            self.logger.error(f"Server error: {e}")
+        finally:
             self.stop()
+    
+    def start(self):
+        """Start the SMTP relay server with system tray"""
+        # Start server in background thread
+        server_thread = threading.Thread(target=self._run_server, daemon=True)
+        server_thread.start()
+        
+        # Create and run tray icon (blocks until quit)
+        self._create_tray_icon()
+        self.tray_icon.run()
     
     def stop(self):
         """Stop the SMTP relay server"""
+        self.running = False
         if self.controller:
-            self.controller.stop()
-            self.logger.info("SMTP Relay stopped")
+            try:
+                self.controller.stop()
+                self.logger.info("SMTP Relay stopped")
+            except Exception as e:
+                self.logger.error(f"Error stopping controller: {e}")
+        if self.loop and self.loop.is_running():
+            self.loop.call_soon_threadsafe(self.loop.stop)
 
 def main():
     """Main entry point"""

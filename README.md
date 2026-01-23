@@ -27,6 +27,8 @@ Dependencies are installed globally:
 - google-auth-oauthlib
 - google-auth-httplib2
 - google-api-python-client
+- pystray
+- Pillow
 
 ## Setup
 
@@ -65,15 +67,19 @@ This will:
 
 ### 4. Run the Relay
 
-Start the SMTP relay server:
-```bash
-python smtp_relay.py
-```
-
-Or use the batch file:
+Start the SMTP relay server with system tray:
 ```bash
 start_relay.bat
 ```
+
+The server will start in the background with a system tray icon.
+
+**System Tray Features**:
+- Blue icon appears in system tray
+- Right-click menu:
+  - View Log (opens in Notepad)
+  - Stop & Exit
+- No console window (runs silently)
 
 ## Configuration
 
@@ -105,12 +111,12 @@ Configure applications to use:
 
 ## Auto-Start on Login
 
-A shortcut has been created in:
-```
-%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\SMTP_Relay.lnk
-```
+To make the relay start automatically on login:
 
-The relay will start automatically when you log in.
+1. Press `Win+R` and type `shell:startup`
+2. Create a shortcut to `start_relay.bat` in the Startup folder
+
+The relay will start in the system tray automatically when you log in.
 
 ## Files
 
@@ -140,10 +146,16 @@ Re-run `setup_oauth.py` to generate a new refresh token.
 
 ## Changelog
 
+### 2026-01-23 - System Tray Integration
+- Added system tray icon with menu (View Log, Stop & Exit)
+- Runs silently in background without console window
+- Threaded server architecture for non-blocking operation
+- Fixed asyncio event loop deprecation warning
+- Batch file launches app and exits immediately
+
 ### 2026-01-23 - Initial Release
 - OAuth2 authentication with Gmail SMTP
 - Local SMTP relay server on port 1025
-- Automatic startup on Windows login
 - Simplified logging (startup, auth, email subject only)
 - Auto-refresh OAuth2 tokens
 
