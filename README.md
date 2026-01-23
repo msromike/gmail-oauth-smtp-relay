@@ -56,13 +56,17 @@ Dependencies installed:
 
 ### 1. Google Cloud Configuration
 
+> **Detailed Guide:** See [GOOGLE_SETUP_GUIDE.md](GOOGLE_SETUP_GUIDE.md) for complete step-by-step instructions with troubleshooting.
+
+Quick steps:
 1. Go to https://console.cloud.google.com
 2. Create a new project
 3. Enable Gmail API
-4. Create OAuth 2.0 Client ID (Web application type)
-5. Add authorized redirect URI: `http://localhost:8080/`
-6. Add your Gmail address as a test user in OAuth consent screen
-7. Download credentials
+4. Configure OAuth consent screen (External type)
+5. **Add yourself as test user** (critical step)
+6. Create OAuth 2.0 Client ID (Web application type)
+7. Add authorized redirect URI: `http://localhost:8080/`
+8. Download credentials JSON file
 
 ### 2. Configure Application
 
