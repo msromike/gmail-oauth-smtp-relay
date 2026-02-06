@@ -263,6 +263,20 @@ class SMTPRelayServer:
     
     def start(self):
         """Start the SMTP relay server with system tray"""
+        # Check if port is already in use
+        import socket
+        relay_config = self.config['smtp_relay']
+        host = relay_config['host']
+        port = relay_config['port']
+        
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            sock.bind((host, port))
+            sock.close()
+        except OSError:
+            self.logger.error(f"Port {port} already in use - SMTP Relay may already be running")
+            sys.exit(1)
+        
         # Create handler (continues even if credentials fail to load)
         handler = GmailOAuth2Handler(self.config)
         
