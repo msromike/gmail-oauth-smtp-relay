@@ -63,7 +63,9 @@ def setup_oauth():
     creds = flow.run_local_server(port=8080, open_browser=True)
     
     # Save refresh token to config
+    import time
     config['gmail']['refresh_token'] = creds.refresh_token
+    config['gmail']['token_timestamp'] = int(time.time())
     
     with open(config_path, 'w') as f:
         json.dump(config, f, indent=2)

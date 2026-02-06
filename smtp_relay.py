@@ -52,7 +52,7 @@ class GmailOAuth2Handler:
             
         except Exception as e:
             self.logger.error(f"Failed to load credentials: {e}")
-            raise
+            self.credentials = None
     
     def _get_oauth2_string(self):
         """Generate OAuth2 authentication string for SMTP"""
@@ -85,28 +85,46 @@ class GmailOAuth2Handler:
     
     def _send_via_gmail(self, envelope):
         """Send email via Gmail SMTP using OAuth2"""
+        import subprocess
         
-        # Refresh credentials if needed
-        if not self.credentials.valid:
-            self.credentials.refresh(Request())
-        
-        # Connect to Gmail SMTP
-        smtp_config = self.config['smtp_relay']
-        server = smtplib.SMTP(smtp_config['gmail_smtp'], smtp_config['gmail_smtp_port'])
-        server.starttls()
-        
-        # Authenticate with OAuth2
-        auth_string = self._get_oauth2_string()
-        server.docmd('AUTH', 'XOAUTH2 ' + auth_string)
-        
-        # Send the email
-        server.sendmail(
-            envelope.mail_from,
-            envelope.rcpt_tos,
-            envelope.content.decode('utf-8', errors='replace')
-        )
-        
-        server.quit()
+        try:
+            # Check if credentials exist
+            if not self.credentials:
+                raise Exception("OAuth credentials not loaded. Run setup_oauth.py")
+            
+            # Refresh credentials if needed
+            if not self.credentials.valid:
+                self.credentials.refresh(Request())
+            
+            # Connect to Gmail SMTP
+            smtp_config = self.config['smtp_relay']
+            server = smtplib.SMTP(smtp_config['gmail_smtp'], smtp_config['gmail_smtp_port'])
+            server.starttls()
+            
+            # Authenticate with OAuth2
+            auth_string = self._get_oauth2_string()
+            server.docmd('AUTH', 'XOAUTH2 ' + auth_string)
+            
+            # Send the email
+            server.sendmail(
+                envelope.mail_from,
+                envelope.rcpt_tos,
+                envelope.content.decode('utf-8', errors='replace')
+            )
+            
+            server.quit()
+            
+        except Exception as e:
+            error_str = str(e)
+            # Check if it's an OAuth error
+            if 'invalid_grant' in error_str or 'expired' in error_str.lower() or 'revoked' in error_str.lower():
+                msg_text = "SMTP Relay: OAuth token expired. Run setup_oauth.py to refresh."
+                self.logger.error(msg_text)
+                try:
+                    subprocess.run(['msg', '*', msg_text], timeout=5)
+                except:
+                    pass
+            raise
 
 class SMTPRelayServer:
     """Main SMTP Relay Server"""
@@ -192,16 +210,13 @@ class SMTPRelayServer:
         if self.tray_icon:
             self.tray_icon.stop()
     
-    def _run_server(self):
+    def _run_server(self, handler):
         """Run the SMTP server in background thread"""
         relay_config = self.config['smtp_relay']
         host = relay_config['host']
         port = relay_config['port']
         
         self.logger.info(f"SMTP Relay starting on {host}:{port}")
-        
-        # Create handler
-        handler = GmailOAuth2Handler(self.config)
         
         # Create and start controller
         self.controller = Controller(
@@ -225,8 +240,11 @@ class SMTPRelayServer:
     
     def start(self):
         """Start the SMTP relay server with system tray"""
+        # Create handler (continues even if credentials fail to load)
+        handler = GmailOAuth2Handler(self.config)
+        
         # Start server in background thread
-        server_thread = threading.Thread(target=self._run_server, daemon=True)
+        server_thread = threading.Thread(target=self._run_server, args=(handler,), daemon=True)
         server_thread.start()
         
         # Create and run tray icon (blocks until quit)
