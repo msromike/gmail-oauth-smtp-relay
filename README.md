@@ -34,8 +34,8 @@ Local Application --> SMTP Relay (localhost:1025) --> Gmail SMTP (OAuth2) --> Re
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/oauth2-smtp-relay.git
-cd oauth2-smtp-relay
+git clone https://github.com/msromike/gmail-oauth-smtp-relay.git
+cd gmail-oauth-smtp-relay
 ```
 
 2. Install dependencies:
