@@ -172,6 +172,11 @@ Re-run `setup_oauth.py` to generate a new refresh token.
 
 ## Changelog
 
+### 2026-02-06 - Multiple Instance Prevention
+- Added port availability check to prevent duplicate instances
+- Script exits immediately if port 1025 is already in use
+- Eliminates duplicate tray icons from multiple launches
+
 ### 2026-01-23 - Clean Shutdown Handling
 - Improved graceful shutdown sequence to eliminate error messages
 - Controller stops before event loop for clean termination
