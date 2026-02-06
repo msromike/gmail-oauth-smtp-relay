@@ -15,11 +15,11 @@ Local SMTP relay server that accepts email from applications and forwards them t
 
 ## Overview
 
-This relay server allows local applications to send email through Gmail without storing passwords. It uses OAuth2 for secure authentication with Google's SMTP servers.
+This relay server allows local applications to send email through Gmail without storing passwords. It uses OAuth2 for secure authentication with Google''s SMTP servers.
 
 ## Architecture
 
-```
+```text
 Local Application --> SMTP Relay (localhost:1025) --> Gmail SMTP (OAuth2) --> Recipients
 ```
 
@@ -33,17 +33,20 @@ Local Application --> SMTP Relay (localhost:1025) --> Gmail SMTP (OAuth2) --> Re
 ## Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/msromike/gmail-oauth-smtp-relay.git
 cd gmail-oauth-smtp-relay
 ```
 
 2. Install dependencies:
+
 ```bash
 pip install -r requirements.txt
 ```
 
 Dependencies installed:
+
 - aiosmtpd - SMTP server implementation
 - google-auth - OAuth2 authentication
 - google-auth-oauthlib - OAuth2 flow handling
@@ -59,7 +62,8 @@ Dependencies installed:
 > **Detailed Guide:** See [GOOGLE_SETUP_GUIDE.md](GOOGLE_SETUP_GUIDE.md) for complete step-by-step instructions with troubleshooting.
 
 Quick steps:
-1. Go to https://console.cloud.google.com
+
+1. Go to <https://console.cloud.google.com>
 2. Create a new project
 3. Enable Gmail API
 4. Configure OAuth consent screen (External type)
@@ -71,11 +75,13 @@ Quick steps:
 ### 2. Configure Application
 
 Copy the template and edit with your credentials:
+
 ```bash
 copy config.json.template config.json
 ```
 
 Edit `config.json`:
+
 - `client_id`: Your OAuth2 client ID
 - `client_secret`: Your OAuth2 client secret
 - `email`: Your Gmail address
@@ -83,17 +89,20 @@ Edit `config.json`:
 ### 3. Authenticate
 
 Run the OAuth2 setup (one-time):
+
 ```bash
 python setup_oauth.py
 ```
 
 This will:
+
 - Open your browser for Google authentication
 - Save the refresh token to config.json
 
 ### 4. Run the Relay
 
 Start the SMTP relay server with system tray:
+
 ```bash
 start_relay.bat
 ```
@@ -101,6 +110,7 @@ start_relay.bat
 The server will start in the background with a system tray icon.
 
 **System Tray Features**:
+
 - Blue icon appears in system tray
 - Right-click menu:
   - View Log (opens in Notepad)
@@ -112,24 +122,28 @@ The server will start in the background with a system tray icon.
 `config.json` settings:
 
 ### Gmail Section
+
 - `client_id`: Google OAuth2 client ID
 - `client_secret`: Google OAuth2 client secret
 - `refresh_token`: OAuth2 refresh token (auto-generated)
 - `email`: Your Gmail address
 
 ### SMTP Relay Section
+
 - `host`: Relay listen address (default: 127.0.0.1)
 - `port`: Relay listen port (default: 1025)
 - `gmail_smtp`: Gmail SMTP server (smtp.gmail.com)
 - `gmail_smtp_port`: Gmail SMTP port (587)
 
 ### Logging Section
+
 - `level`: Log level (DEBUG, INFO, WARNING, ERROR)
 - `file`: Log file path
 
 ## Usage
 
 Configure applications to use:
+
 - **SMTP Server**: 127.0.0.1
 - **Port**: 1025
 - **Authentication**: None (relay handles OAuth2)
@@ -155,12 +169,15 @@ The relay will start in the system tray automatically when you log in.
 ## Troubleshooting
 
 ### Redirect URI Mismatch
+
 Ensure `http://localhost:8080/` is added to authorized redirect URIs in Google Cloud Console.
 
 ### Access Denied
+
 Add your Gmail address as a test user in OAuth consent screen settings.
 
 ### Token Refresh Failed
+
 Re-run `setup_oauth.py` to generate a new refresh token.
 
 ## Security Notes
@@ -173,17 +190,20 @@ Re-run `setup_oauth.py` to generate a new refresh token.
 ## Changelog
 
 ### 2026-02-06 - Multiple Instance Prevention
+
 - Added port availability check to prevent duplicate instances
 - Script exits immediately if port 1025 is already in use
 - Eliminates duplicate tray icons from multiple launches
 
 ### 2026-01-23 - Clean Shutdown Handling
+
 - Improved graceful shutdown sequence to eliminate error messages
 - Controller stops before event loop for clean termination
 - Simplified logging on exit (only success messages, debug for exceptions)
 - Tray menu shutdown now shows "SMTP Relay stopped cleanly"
 
 ### 2026-01-23 - System Tray Integration
+
 - Added system tray icon with menu (View Log, Stop & Exit)
 - Runs silently in background without console window
 - Threaded server architecture for non-blocking operation
@@ -191,6 +211,7 @@ Re-run `setup_oauth.py` to generate a new refresh token.
 - Batch file launches app and exits immediately
 
 ### 2026-01-23 - Initial Release
+
 - OAuth2 authentication with Gmail SMTP
 - Local SMTP relay server on port 1025
 - Simplified logging (startup, auth, email subject only)
