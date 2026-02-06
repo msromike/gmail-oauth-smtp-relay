@@ -65,6 +65,26 @@ class GmailOAuth2Handler:
         auth_string = f"user={self.config['gmail']['email']}\1auth=Bearer {access_token}\1\1"
         return base64.b64encode(auth_string.encode()).decode()
     
+    def _check_token_age_warning(self):
+        """Check token age and warn if approaching expiration"""
+        import time
+        import subprocess
+        
+        token_timestamp = self.config.get('gmail', {}).get('token_timestamp')
+        if not token_timestamp:
+            return  # No timestamp, can't check
+        
+        token_age_hours = (time.time() - token_timestamp) / 3600
+        
+        if token_age_hours >= 120:  # 5 days = 120 hours
+            hours_remaining = (7 * 24) - token_age_hours
+            warning = f"SMTP Relay: OAuth token expires in ~{hours_remaining:.0f} hours. Run setup_oauth.py to refresh."
+            self.logger.warning(warning)
+            try:
+                subprocess.run(['msg', '*', warning], timeout=5)
+            except:
+                pass
+    
     async def handle_DATA(self, server, session, envelope):
         """Handle incoming email data"""
         try:
@@ -74,6 +94,9 @@ class GmailOAuth2Handler:
             subject = msg.get('Subject', '(no subject)')
             
             self.logger.info(f"Sending: From={envelope.mail_from} Subject='{subject}'")
+            
+            # Check token age and warn if close to expiration
+            self._check_token_age_warning()
             
             # Send via Gmail SMTP with OAuth2
             self._send_via_gmail(envelope)
